@@ -81,9 +81,11 @@ class Transaction:
                 )
 
                 if not found:
-                    for installed_package in self._installed_packages:
-                        if installed_package.name == current_package.name:
-                            operations.append(Uninstall(current_package))
+                    operations.extend(
+                        Uninstall(current_package)
+                        for installed_package in self._installed_packages
+                        if installed_package.name == current_package.name
+                    )
 
             if synchronize:
                 current_package_names = {

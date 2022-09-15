@@ -57,9 +57,7 @@ class LinkSource:
     @property
     def packages(self) -> Iterator[Package]:
         for link in self.links:
-            pkg = self.link_package_data(link)
-
-            if pkg:
+            if pkg := self.link_package_data(link):
                 yield pkg
 
     @property
@@ -72,15 +70,14 @@ class LinkSource:
         name: str | None = None
         version_string: str | None = None
         version: Version | None = None
-        m = wheel_file_re.match(link.filename) or sdist_file_re.match(link.filename)
-
-        if m:
+        if m := wheel_file_re.match(link.filename) or sdist_file_re.match(
+            link.filename
+        ):
             name = canonicalize_name(m.group("name"))
             version_string = m.group("ver")
         else:
             info, ext = link.splitext()
-            match = cls.VERSION_REGEX.match(info)
-            if match:
+            if match := cls.VERSION_REGEX.match(info):
                 name = match.group(1)
                 version_string = match.group(2)
 
@@ -93,10 +90,11 @@ class LinkSource:
                 )
                 return None
 
-        pkg = None
-        if name and version:
-            pkg = Package(name, version, source_url=link.url)
-        return pkg
+        return (
+            Package(name, version, source_url=link.url)
+            if name and version
+            else None
+        )
 
     def links_for_version(self, name: str, version: Version) -> Iterator[Link]:
         name = canonicalize_name(name)

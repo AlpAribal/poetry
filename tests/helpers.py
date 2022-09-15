@@ -66,10 +66,7 @@ def get_dependency(
 
 
 def fixture(path: str | None = None) -> Path:
-    if path:
-        return FIXTURE_PATH / path
-    else:
-        return FIXTURE_PATH
+    return FIXTURE_PATH / path if path else FIXTURE_PATH
 
 
 def copy_or_symlink(source: Path, dest: Path) -> None:
@@ -264,10 +261,7 @@ def make_entry_point_from_plugin(
         value=f"{cls.__module__}:{cls.__name__}",
     )
 
-    if dist:
-        return ep._for(dist)
-
-    return ep
+    return ep._for(dist) if dist else ep
 
 
 def mock_metadata_entry_points(

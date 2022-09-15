@@ -46,16 +46,16 @@ def env() -> MockEnv:
 @pytest.fixture()
 def mock_pypi(http: type[httpretty.httpretty]) -> None:
     def callback(
-        request: HTTPrettyRequest, uri: str, headers: dict[str, Any]
-    ) -> list[int | dict[str, Any] | str] | None:
+            request: HTTPrettyRequest, uri: str, headers: dict[str, Any]
+        ) -> list[int | dict[str, Any] | str] | None:
         parts = uri.rsplit("/")
 
         name = parts[-3]
         version = parts[-2]
 
-        fixture = JSON_FIXTURES / name / (version + ".json")
+        fixture = JSON_FIXTURES / name / f"{version}.json"
         if not fixture.exists():
-            fixture = JSON_FIXTURES / (name + ".json")
+            fixture = JSON_FIXTURES / f"{name}.json"
 
         if not fixture.exists():
             return
@@ -73,12 +73,12 @@ def mock_pypi(http: type[httpretty.httpretty]) -> None:
 @pytest.fixture()
 def mock_legacy(http: type[httpretty.httpretty]) -> None:
     def callback(
-        request: HTTPrettyRequest, uri: str, headers: dict[str, Any]
-    ) -> list[int | dict[str, Any] | str]:
+            request: HTTPrettyRequest, uri: str, headers: dict[str, Any]
+        ) -> list[int | dict[str, Any] | str]:
         parts = uri.rsplit("/")
         name = parts[-2]
 
-        fixture = LEGACY_FIXTURES / (name + ".html")
+        fixture = LEGACY_FIXTURES / f"{name}.html"
 
         with fixture.open(encoding="utf-8") as f:
             return [200, headers, f.read()]

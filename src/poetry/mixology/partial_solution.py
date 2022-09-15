@@ -209,7 +209,4 @@ class PartialSolution:
             return positive.relation(term)
 
         negative = self._negative.get(term.dependency.complete_name)
-        if negative is None:
-            return SetRelation.OVERLAPPING
-
-        return negative.relation(term)
+        return SetRelation.OVERLAPPING if negative is None else negative.relation(term)

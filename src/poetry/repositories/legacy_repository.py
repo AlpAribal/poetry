@@ -144,6 +144,4 @@ class LegacyRepository(HTTPRepository):
 
     def _get_page(self, endpoint: str) -> SimpleRepositoryPage | None:
         response = self._get_response(endpoint)
-        if not response:
-            return None
-        return SimpleRepositoryPage(response.url, response.text)
+        return SimpleRepositoryPage(response.url, response.text) if response else None

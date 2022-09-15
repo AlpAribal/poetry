@@ -90,8 +90,7 @@ list of installed packages
             del poetry_content["group"]
 
         removed_set = set(removed)
-        not_found = set(packages).difference(removed_set)
-        if not_found:
+        if not_found := set(packages).difference(removed_set):
             raise ValueError(
                 "The following packages were not found: " + ", ".join(sorted(not_found))
             )

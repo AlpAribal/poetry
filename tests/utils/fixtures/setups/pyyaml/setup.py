@@ -109,11 +109,11 @@ class Distribution(_Distribution):
                 (
                     ext.option_name,
                     None,
-                    "include %s (default if %s is available)"
-                    % (ext.feature_description, ext.feature_name),
+                    f"include {ext.feature_description} (default if {ext.feature_name} is available)",
                 ),
-                (ext.neg_option_name, None, "exclude %s" % ext.feature_description),
+                (ext.neg_option_name, None, f"exclude {ext.feature_description}"),
             ] + self.global_options
+
             self.negative_opt = self.negative_opt.copy()
             self.negative_opt[ext.neg_option_name] = ext.option_name
 
@@ -130,11 +130,7 @@ class Distribution(_Distribution):
         implementation = platform.python_implementation()
         if implementation != "CPython":
             return False
-        if isinstance(ext, Extension):
-            with_ext = getattr(self, ext.attr_name)
-            return with_ext
-        else:
-            return True
+        return getattr(self, ext.attr_name) if isinstance(ext, Extension) else True
 
 
 class Extension(_Extension):
@@ -146,14 +142,14 @@ class Extension(_Extension):
                 base, ext = os.path.splitext(filename)
                 if ext == ".pyx":
                     sources.remove(filename)
-                    sources.append("%s.c" % base)
+                    sources.append(f"{base}.c")
         _Extension.__init__(self, name, sources, **kwds)
         self.feature_name = feature_name
         self.feature_description = feature_description
         self.feature_check = feature_check
         self.attr_name = "with_" + feature_name.replace("-", "_")
-        self.option_name = "with-" + feature_name
-        self.neg_option_name = "without-" + feature_name
+        self.option_name = f"with-{feature_name}"
+        self.neg_option_name = f"without-{feature_name}"
 
 
 class build_ext(_build_ext):
@@ -218,17 +214,17 @@ class build_ext(_build_ext):
             self.build_extension(ext)
 
     def check_extension_availability(self, ext):
-        cache = os.path.join(self.build_temp, "check_%s.out" % ext.feature_name)
+        cache = os.path.join(self.build_temp, f"check_{ext.feature_name}.out")
         if not self.force and os.path.isfile(cache):
             data = open(cache).read().strip()
-            if data == "1":
-                return True
-            elif data == "0":
+            if data == "0":
                 return False
+            elif data == "1":
+                return True
         mkpath(self.build_temp)
-        src = os.path.join(self.build_temp, "check_%s.c" % ext.feature_name)
+        src = os.path.join(self.build_temp, f"check_{ext.feature_name}.c")
         open(src, "w").write(ext.feature_check)
-        log.info("checking if %s is compilable" % ext.feature_name)
+        log.info(f"checking if {ext.feature_name} is compilable")
         try:
             [obj] = self.compiler.compile(
                 [src],
@@ -240,18 +236,16 @@ class build_ext(_build_ext):
         except CompileError:
             log.warn("")
             log.warn(
-                "%s is not found or a compiler error: forcing --%s"
-                % (ext.feature_name, ext.neg_option_name)
+                f"{ext.feature_name} is not found or a compiler error: forcing --{ext.neg_option_name}"
             )
-            log.warn(
-                "(if %s is installed correctly, you may need to" % ext.feature_name
-            )
+
+            log.warn(f"(if {ext.feature_name} is installed correctly, you may need to")
             log.warn(" specify the option --include-dirs or uncomment and")
             log.warn(" modify the parameter include_dirs in setup.cfg)")
             open(cache, "w").write("0\n")
             return False
-        prog = "check_%s" % ext.feature_name
-        log.info("checking if %s is linkable" % ext.feature_name)
+        prog = f"check_{ext.feature_name}"
+        log.info(f"checking if {ext.feature_name} is linkable")
         try:
             self.compiler.link_executable(
                 [obj],
@@ -265,12 +259,10 @@ class build_ext(_build_ext):
         except LinkError:
             log.warn("")
             log.warn(
-                "%s is not found or a linker error: forcing --%s"
-                % (ext.feature_name, ext.neg_option_name)
+                f"{ext.feature_name} is not found or a linker error: forcing --{ext.neg_option_name}"
             )
-            log.warn(
-                "(if %s is installed correctly, you may need to" % ext.feature_name
-            )
+
+            log.warn(f"(if {ext.feature_name} is installed correctly, you may need to")
             log.warn(" specify the option --library-dirs or uncomment and")
             log.warn(" modify the parameter library_dirs in setup.cfg)")
             open(cache, "w").write("0\n")
@@ -290,9 +282,9 @@ class bdist_rpm(_bdist_rpm):
             if with_ext is None:
                 continue
             if with_ext:
-                features.append("--" + ext.option_name)
+                features.append(f"--{ext.option_name}")
             else:
-                features.append("--" + ext.neg_option_name)
+                features.append(f"--{ext.neg_option_name}")
         sys.argv[0] = " ".join([argv0] + features)
         spec_file = _bdist_rpm._make_spec_file(self)
         sys.argv[0] = argv0

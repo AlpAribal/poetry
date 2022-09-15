@@ -53,21 +53,17 @@ class Publisher:
             if url is None:
                 raise RuntimeError(f"Repository {repository_name} is not defined")
 
-        if not (username and password):
-            # Check if we have a token first
-            token = self._authenticator.get_pypi_token(repository_name)
-            if token:
+        if not username or not password:
+            if token := self._authenticator.get_pypi_token(repository_name):
                 logger.debug(f"Found an API token for {repository_name}.")
                 username = "__token__"
                 password = token
-            else:
-                auth = self._authenticator.get_http_auth(repository_name)
-                if auth:
-                    logger.debug(
-                        f"Found authentication information for {repository_name}."
-                    )
-                    username = auth.username
-                    password = auth.password
+            elif auth := self._authenticator.get_http_auth(repository_name):
+                logger.debug(
+                    f"Found authentication information for {repository_name}."
+                )
+                username = auth.username
+                password = auth.password
 
         certificates = self._authenticator.get_certs_for_repository(repository_name)
         resolved_cert = cert or certificates.cert or certificates.verify

@@ -11,8 +11,7 @@ class CacheListCommand(Command):
     def handle(self) -> int:
         config = Config.create()
         if config.repository_cache_directory.exists():
-            caches = sorted(config.repository_cache_directory.iterdir())
-            if caches:
+            if caches := sorted(config.repository_cache_directory.iterdir()):
                 for cache in caches:
                     self.line(f"<info>{cache.name}</>")
                 return 0

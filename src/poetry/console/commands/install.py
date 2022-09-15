@@ -73,10 +73,7 @@ dependencies and not including the current project, run the command with the
 
     @property
     def activated_groups(self) -> set[str]:
-        if self.option("only-root"):
-            return set()
-        else:
-            return super().activated_groups
+        return set() if self.option("only-root") else super().activated_groups
 
     def handle(self) -> int:
         from poetry.core.masonry.utils.module import ModuleOrPackageNotFound

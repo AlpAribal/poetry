@@ -388,7 +388,7 @@ def test_add_git_ssh_constraint(
     repo.add_package(get_package("cleo", "0.6.5"))
 
     url = "git+ssh://git@github.com/demo/demo.git@develop"
-    tester.execute(f"{url}" if not editable else f"-e {url}")
+    tester.execute(f"-e {url}" if editable else f"{url}")
 
     expected = """\
 
@@ -435,7 +435,7 @@ def test_add_directory_constraint(
     repo.add_package(get_package("cleo", "0.6.5"))
 
     path = "../git/github.com/demo/demo"
-    tester.execute(f"{path}" if not editable else f"-e {path}")
+    tester.execute(f"-e {path}" if editable else f"{path}")
 
     expected = f"""\
 

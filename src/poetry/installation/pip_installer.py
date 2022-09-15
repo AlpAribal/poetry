@@ -167,10 +167,11 @@ class PipInstaller(BaseInstaller):
 
         if package.source_type in ["file", "directory"]:
             assert package.source_url is not None
-            if package.root_dir:
-                req = (package.root_dir / package.source_url).as_posix()
-            else:
-                req = os.path.realpath(package.source_url)
+            req = (
+                (package.root_dir / package.source_url).as_posix()
+                if package.root_dir
+                else os.path.realpath(package.source_url)
+            )
 
             if package.develop and package.source_type == "directory":
                 return ["-e", req]
@@ -183,11 +184,7 @@ class PipInstaller(BaseInstaller):
                 f"#egg={package.name}"
             )
 
-            if package.develop:
-                return ["-e", req]
-
-            return req
-
+            return ["-e", req] if package.develop else req
         if package.source_type == "url":
             return f"{package.source_url}#egg={package.name}"
 

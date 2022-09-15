@@ -40,11 +40,7 @@ class DebugResolveCommand(InitCommand):
         from poetry.repositories.repository import Repository
         from poetry.utils.env import EnvManager
 
-        packages = self.argument("package")
-
-        if not packages:
-            package = self.poetry.package
-        else:
+        if packages := self.argument("package"):
             # Using current pool for determine_requirements()
             self._pool = self.poetry.pool
 
@@ -74,6 +70,8 @@ class DebugResolveCommand(InitCommand):
 
                 package.add_dependency(Factory.create_dependency(name, constraint))
 
+        else:
+            package = self.poetry.package
         package.python_versions = self.option("python") or (
             self.poetry.package.python_versions
         )

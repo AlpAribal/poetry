@@ -124,12 +124,10 @@ class Shell:
         else:
             suffix = ""
 
-        return "activate" + suffix
+        return f"activate{suffix}"
 
     def _get_source_command(self) -> str:
-        if self._name in ("fish", "csh", "tcsh", "nu"):
-            return "source"
-        return "."
+        return "source" if self._name in ("fish", "csh", "tcsh", "nu") else "."
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}("{self._name}", "{self._path}")'

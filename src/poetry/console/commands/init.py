@@ -125,8 +125,7 @@ The <c1>init</c1> command creates a basic <comment>pyproject.toml</> file in the
         author = self.option("author")
         if not author and vcs_config.get("user.name"):
             author = vcs_config["user.name"]
-            author_email = vcs_config.get("user.email")
-            if author_email:
+            if author_email := vcs_config.get("user.email"):
                 author += f" <{author_email}>"
 
         question = self.create_question(
@@ -135,11 +134,7 @@ The <c1>init</c1> command creates a basic <comment>pyproject.toml</> file in the
         question.set_validator(lambda v: self._validate_author(v, author))
         author = self.ask(question)
 
-        if not author:
-            authors = []
-        else:
-            authors = [author]
-
+        authors = [author] if author else []
         license = self.option("license")
         if not license:
             license = self.ask(self.create_question("License []: ", default=""))
@@ -286,11 +281,7 @@ You can specify a package in the following forms:
                     continue
 
                 canonicalized_name = canonicalize_name(constraint["name"])
-                matches = self._get_pool().search(canonicalized_name)
-                if not matches:
-                    self.line_error("<error>Unable to find package</error>")
-                    package = False
-                else:
+                if matches := self._get_pool().search(canonicalized_name):
                     choices = self._generate_choice_list(matches, canonicalized_name)
 
                     info_string = (
@@ -321,6 +312,9 @@ You can specify a package in the following forms:
                     if package:
                         constraint["name"] = package
 
+                else:
+                    self.line_error("<error>Unable to find package</error>")
+                    package = False
                 # no constraint yet, determine the best version automatically
                 if package and "version" not in constraint:
                     question = self.create_question(
@@ -394,15 +388,16 @@ You can specify a package in the following forms:
         from poetry.version.version_selector import VersionSelector
 
         selector = VersionSelector(self._get_pool())
-        package = selector.find_best_candidate(
-            name, required_version, allow_prereleases=allow_prereleases, source=source
-        )
-
-        if not package:
+        if package := selector.find_best_candidate(
+            name,
+            required_version,
+            allow_prereleases=allow_prereleases,
+            source=source,
+        ):
+            return package.pretty_name, selector.find_recommended_require_version(package)
+        else:
             # TODO: find similar
             raise ValueError(f"Could not find a matching version of package {name}")
-
-        return package.pretty_name, selector.find_recommended_require_version(package)
 
     def _parse_requirements(self, requirements: list[str]) -> list[dict[str, Any]]:
         from poetry.core.pyproject.exceptions import PyProjectException
@@ -445,14 +440,13 @@ You can specify a package in the following forms:
         if author in ["n", "no"]:
             return None
 
-        m = AUTHOR_REGEX.match(author)
-        if not m:
+        if m := AUTHOR_REGEX.match(author):
+            return author
+        else:
             raise ValueError(
                 "Invalid author string. Must be in the format: "
                 "John Smith <john@example.com>"
             )
-
-        return author
 
     @staticmethod
     def _validate_package(package: str | None) -> str | None:

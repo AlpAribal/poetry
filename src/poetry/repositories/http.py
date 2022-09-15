@@ -285,6 +285,4 @@ class HTTPRepository(CachedRepository, ABC):
 
     def _get_page(self, endpoint: str) -> HTMLPage | None:
         response = self._get_response(endpoint)
-        if not response:
-            return None
-        return HTMLPage(response.url, response.text)
+        return HTMLPage(response.url, response.text) if response else None

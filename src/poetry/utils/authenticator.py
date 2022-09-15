@@ -43,7 +43,7 @@ class RepositoryCertificateConfig:
     def create(
         cls, repository: str, config: Config | None
     ) -> RepositoryCertificateConfig:
-        config = config if config else Config.create()
+        config = config or Config.create()
 
         verify: str | bool = config.get(
             f"certificates.{repository}.verify",
@@ -117,16 +117,17 @@ class Authenticator:
         ] | None = None
         self._password_manager = PasswordManager(self._config)
         self._cache_control = (
-            FileCache(
+            None
+            if disable_cache
+            else FileCache(
                 str(
                     self._config.repository_cache_directory
                     / (cache_id or "_default_cache")
                     / "_http"
                 )
             )
-            if not disable_cache
-            else None
         )
+
         self.get_repository_config_for_url = functools.lru_cache(maxsize=None)(
             self._get_repository_config_for_url
         )
@@ -223,7 +224,7 @@ class Authenticator:
             "timeout": kwargs.get("timeout", REQUESTS_TIMEOUT),
             "allow_redirects": kwargs.get("allow_redirects", True),
         }
-        send_kwargs.update(settings)
+        send_kwargs |= settings
 
         attempt = 0
 
@@ -312,11 +313,7 @@ class Authenticator:
         netloc = parsed_url.netloc
 
         if url not in self._credentials:
-            if "@" not in netloc:
-                # no credentials were provided in the url, try finding the
-                # best repository configuration
-                self._credentials[url] = self._get_credentials_for_url(url)
-            else:
+            if "@" in netloc:
                 # Split from the right because that's how urllib.parse.urlsplit()
                 # behaves if more than one @ is present (which can be checked using
                 # the password attribute of urlsplit()'s return value).
@@ -330,6 +327,10 @@ class Authenticator:
                     urllib.parse.unquote(password),
                 )
 
+            else:
+                # no credentials were provided in the url, try finding the
+                # best repository configuration
+                self._credentials[url] = self._get_credentials_for_url(url)
         return self._credentials[url]
 
     def get_pypi_token(self, name: str) -> str | None:
@@ -342,11 +343,11 @@ class Authenticator:
             repository = AuthenticatorRepositoryConfig(
                 name, "https://upload.pypi.org/legacy/"
             )
-        else:
-            if name not in self.configured_repositories:
-                return None
+        elif name in self.configured_repositories:
             repository = self.configured_repositories[name]
 
+        else:
+            return None
         return self._get_credentials_for_repository(
             repository=repository, username=username
         )
@@ -423,8 +424,7 @@ class Authenticator:
         return candidates[0]
 
     def _get_certs_for_url(self, url: str) -> RepositoryCertificateConfig:
-        selected = self.get_repository_config_for_url(url)
-        if selected:
+        if selected := self.get_repository_config_for_url(url):
             return selected.certs(config=self._config)
         return RepositoryCertificateConfig()
 
