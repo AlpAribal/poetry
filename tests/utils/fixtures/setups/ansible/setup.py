@@ -69,23 +69,21 @@ def _maintain_symlinks(symlink_type, base_path):
         with open(SYMLINK_CACHE) as f:
             symlink_data = json.load(f)
     except OSError as e:
-        # IOError on py2, OSError on py3.  Both have errno
-        if e.errno == 2:
-            # SYMLINKS_CACHE doesn't exist.  Fallback to trying to create the
-            # cache now.  Will work if we're running directly from a git
-            # checkout or from an sdist created earlier.
-            symlink_data = {
-                "script": _find_symlinks("bin"),
-                "library": _find_symlinks("lib", ".py"),
-            }
+        if e.errno != 2:
+            raise
+        # SYMLINKS_CACHE doesn't exist.  Fallback to trying to create the
+        # cache now.  Will work if we're running directly from a git
+        # checkout or from an sdist created earlier.
+        symlink_data = {
+            "script": _find_symlinks("bin"),
+            "library": _find_symlinks("lib", ".py"),
+        }
 
-            # Sanity check that something we know should be a symlink was
-            # found.  We'll take that to mean that the current directory
-            # structure properly reflects symlinks in the git repo
-            if "ansible-playbook" in symlink_data["script"]["ansible"]:
-                _cache_symlinks(symlink_data)
-            else:
-                raise
+        # Sanity check that something we know should be a symlink was
+        # found.  We'll take that to mean that the current directory
+        # structure properly reflects symlinks in the git repo
+        if "ansible-playbook" in symlink_data["script"]["ansible"]:
+            _cache_symlinks(symlink_data)
         else:
             raise
     symlinks = symlink_data[symlink_type]
@@ -97,9 +95,7 @@ def _maintain_symlinks(symlink_type, base_path):
                 try:
                     os.unlink(dest_path)
                 except OSError as e:
-                    if e.errno == 2:
-                        # File does not exist which is all we wanted
-                        pass
+                    pass
                 os.symlink(source, dest_path)
 
 
@@ -148,13 +144,12 @@ def read_file(file_name):
 
 def read_requirements(file_name):
     """Read requirements file as a list."""
-    reqs = read_file(file_name).splitlines()
-    if not reqs:
+    if reqs := read_file(file_name).splitlines():
+        return reqs
+    else:
         raise RuntimeError(
-            "Unable to read requirements from the %s file"
-            "That indicates this copy of the source code is incomplete." % file_name
+            f"Unable to read requirements from the {file_name} fileThat indicates this copy of the source code is incomplete."
         )
-    return reqs
 
 
 PYCRYPTO_DIST = "pycrypto"
@@ -172,7 +167,7 @@ def get_crypto_req():
 
     if crypto_backend == PYCRYPTO_DIST:
         # Attempt to set version requirements
-        return "%s >= 2.6" % PYCRYPTO_DIST
+        return f"{PYCRYPTO_DIST} >= 2.6"
 
     return crypto_backend or None
 
@@ -193,7 +188,7 @@ def substitute_crypto_to_req(req):
 
 def read_extras():
     """Specify any extra requirements for installation."""
-    extras = dict()
+    extras = {}
     extra_requirements_dir = "packaging/requirements"
     for extra_requirements_filename in os.listdir(extra_requirements_dir):
         filename_match = re.search(
@@ -205,9 +200,10 @@ def read_extras():
             extra_requirements_dir, extra_requirements_filename
         )
         try:
-            extras[filename_match.group(1)] = read_file(
+            extras[filename_match[1]] = read_file(
                 extra_req_file_path
             ).splitlines()
+
         except RuntimeError:
             pass
     return extras

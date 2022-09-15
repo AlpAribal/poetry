@@ -30,7 +30,7 @@ def boolean_validator(val: str) -> bool:
 
 
 def boolean_normalizer(val: str) -> bool:
-    return val in ["true", "1"]
+    return val in {"true", "1"}
 
 
 def int_normalizer(val: str) -> int:
@@ -66,11 +66,7 @@ class PackageFilterPolicy:
     @classmethod
     def normalize(cls, policy: str) -> list[str]:
         if boolean_validator(policy):
-            if boolean_normalizer(policy):
-                return [":all:"]
-            else:
-                return [":none:"]
-
+            return [":all:"] if boolean_normalizer(policy) else [":none:"]
         return list(
             {
                 name.strip() if cls.is_reserved(name) else canonicalize_name(name)
@@ -86,16 +82,12 @@ class PackageFilterPolicy:
 
         names = policy.strip().split(",")
 
-        for name in names:
-            if (
-                not name
-                or (cls.is_reserved(name) and len(names) == 1)
-                or re.match(r"^[a-zA-Z\d_-]+$", name)
-            ):
-                continue
-            return False
-
-        return True
+        return not any(
+            name
+            and (not cls.is_reserved(name) or len(names) != 1)
+            and not re.match(r"^[a-zA-Z\d_-]+$", name)
+            for name in names
+        )
 
 
 logger = logging.getLogger(__name__)
@@ -171,10 +163,7 @@ class Config:
             for key in config:
                 value = self.get(parent_key + key)
                 if isinstance(value, dict):
-                    if parent_key != "":
-                        current_parent = parent_key + key + "."
-                    else:
-                        current_parent = key + "."
+                    current_parent = parent_key + key + "." if parent_key != "" else f"{key}."
                     all_[key] = _all(config[key], parent_key=current_parent)
                     continue
 
@@ -193,11 +182,11 @@ class Config:
         pattern = re.compile(r"POETRY_REPOSITORIES_(?P<name>[A-Z_]+)_URL")
 
         for env_key in os.environ.keys():
-            match = pattern.match(env_key)
-            if match:
-                repositories[match.group("name").lower().replace("_", "-")] = {
+            if match := pattern.match(env_key):
+                repositories[match["name"].lower().replace("_", "-")] = {
                     "url": os.environ[env_key]
                 }
+
 
         return repositories
 
@@ -222,9 +211,7 @@ class Config:
         # is set via a POETRY_* environment variable
         if self._use_environment:
             if setting_name == "repositories":
-                # repositories setting is special for now
-                repositories = self._get_environment_repositories()
-                if repositories:
+                if repositories := self._get_environment_repositories():
                     return repositories
 
             env = "POETRY_" + "_".join(k.upper().replace("-", "_") for k in keys)
@@ -248,12 +235,7 @@ class Config:
         def resolve_from_config(match: re.Match[str]) -> Any:
             key = match.group(1)
             config_value = self.get(key)
-            if config_value:
-                return config_value
-
-            # The key doesn't exist in the config but might be resolved later,
-            # so we keep it as a format variable.
-            return f"{{{key}}}"
+            return config_value or f"{{{key}}}"
 
         return re.sub(r"{(.+?)}", resolve_from_config, value)
 

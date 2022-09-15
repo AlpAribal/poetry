@@ -22,11 +22,14 @@ class LockfileRepository(Repository):
         return any(p == package for p in self.packages)
 
     def remove_package(self, package: Package) -> None:
-        index = None
-        for i, repo_package in enumerate(self.packages):
-            if repo_package == package:
-                index = i
-                break
+        index = next(
+            (
+                i
+                for i, repo_package in enumerate(self.packages)
+                if repo_package == package
+            ),
+            None,
+        )
 
         if index is not None:
             del self._packages[index]

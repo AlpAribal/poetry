@@ -76,10 +76,8 @@ def style(fg, bg, options):
         if not isinstance(options, (list, tuple)):
             options = [options]
 
-        for option in options:
-            codes.append(OPTIONS[option])
-
-    return "\033[{}m".format(";".join(map(str, codes)))
+        codes.extend(OPTIONS[option] for option in options)
+    return f'\033[{";".join(map(str, codes))}m'
 
 
 STYLES = {
@@ -120,10 +118,7 @@ def is_interactive():
 
 
 def colorize(style, text):
-    if not is_decorated():
-        return text
-
-    return "{}{}\033[0m".format(STYLES[style], text)
+    return f"{STYLES[style]}{text}\033[0m" if is_decorated() else text
 
 
 def string_to_bool(value):
@@ -196,13 +191,7 @@ def _get_win_folder_with_ctypes(csidl_name):
     buf = ctypes.create_unicode_buffer(1024)
     ctypes.windll.shell32.SHGetFolderPathW(None, csidl_const, None, 0, buf)
 
-    # Downgrade to short path name if have highbit chars. See
-    # <http://bugs.activestate.com/show_bug.cgi?id=85099>.
-    has_high_char = False
-    for c in buf:
-        if ord(c) > 255:
-            has_high_char = True
-            break
+    has_high_char = any(ord(c) > 255 for c in buf)
     if has_high_char:
         buf2 = ctypes.create_unicode_buffer(1024)
         if ctypes.windll.kernel32.GetShortPathNameW(buf.value, buf2, 1024):
@@ -347,32 +336,32 @@ class Cursor:
         self._output = sys.stdout
 
     def move_up(self, lines: int = 1) -> "Cursor":
-        self._output.write("\x1b[{}A".format(lines))
+        self._output.write(f"\x1b[{lines}A")
 
         return self
 
     def move_down(self, lines: int = 1) -> "Cursor":
-        self._output.write("\x1b[{}B".format(lines))
+        self._output.write(f"\x1b[{lines}B")
 
         return self
 
     def move_right(self, columns: int = 1) -> "Cursor":
-        self._output.write("\x1b[{}C".format(columns))
+        self._output.write(f"\x1b[{columns}C")
 
         return self
 
     def move_left(self, columns: int = 1) -> "Cursor":
-        self._output.write("\x1b[{}D".format(columns))
+        self._output.write(f"\x1b[{columns}D")
 
         return self
 
     def move_to_column(self, column: int) -> "Cursor":
-        self._output.write("\x1b[{}G".format(column))
+        self._output.write(f"\x1b[{column}G")
 
         return self
 
     def move_to_position(self, column: int, row: int) -> "Cursor":
-        self._output.write("\x1b[{};{}H".format(row + 1, column))
+        self._output.write(f"\x1b[{row + 1};{column}H")
 
         return self
 
@@ -520,10 +509,9 @@ class Installer:
         Installs Poetry in $POETRY_HOME.
         """
         self._write(
-            "Installing {} ({})".format(
-                colorize("info", "Poetry"), colorize("info", version)
-            )
+            f'Installing {colorize("info", "Poetry")} ({colorize("info", version)})'
         )
+
 
         with self.make_env(version) as env:
             self.install_poetry(version, env)
@@ -535,9 +523,7 @@ class Installer:
 
     def uninstall(self) -> int:
         if not self._data_dir.exists():
-            self._write(
-                "{} is not currently installed.".format(colorize("info", "Poetry"))
-            )
+            self._write(f'{colorize("info", "Poetry")} is not currently installed.')
 
             return 1
 
@@ -547,12 +533,11 @@ class Installer:
 
         if version:
             self._write(
-                "Removing {} ({})".format(
-                    colorize("info", "Poetry"), colorize("b", version)
-                )
+                f'Removing {colorize("info", "Poetry")} ({colorize("b", version)})'
             )
+
         else:
-            self._write("Removing {}".format(colorize("info", "Poetry")))
+            self._write(f'Removing {colorize("info", "Poetry")}')
 
         shutil.rmtree(str(self._data_dir))
         for script in ["poetry", "poetry.bat"]:
@@ -563,11 +548,7 @@ class Installer:
 
     def _install_comment(self, version: str, message: str):
         self._overwrite(
-            "Installing {} ({}): {}".format(
-                colorize("info", "Poetry"),
-                colorize("b", version),
-                colorize("comment", message),
-            )
+            f'Installing {colorize("info", "Poetry")} ({colorize("b", version)}): {colorize("comment", message)}'
         )
 
     @contextmanager
@@ -627,7 +608,7 @@ class Installer:
         self._install_comment(version, "Installing Poetry")
 
         if self._git:
-            specification = "git+" + version
+            specification = f"git+{version}"
         elif self._path:
             specification = version
         else:

@@ -63,7 +63,7 @@ def remove_directory(
 
 
 def merge_dicts(d1: dict[str, Any], d2: dict[str, Any]) -> None:
-    for k in d2.keys():
+    for k in d2:
         if k in d1 and isinstance(d1[k], dict) and isinstance(d2[k], Mapping):
             merge_dicts(d1[k], d2[k])
         else:
@@ -80,7 +80,7 @@ def download_file(
 
     from poetry.puzzle.provider import Indicator
 
-    get = requests.get if not session else session.get
+    get = session.get if session else requests.get
 
     response = get(url, stream=True, timeout=REQUESTS_TIMEOUT)
     response.raise_for_status()
@@ -112,7 +112,7 @@ def download_file(
                         percent = (fetched_size * 100) // total_size
                         if percent > last_percent:
                             last_percent = percent
-                            update_context(f"Downloading {url} {percent:3}%")
+                            update_context(f"Downloading {url} {last_percent:3}%")
 
 
 def get_package_version_display_string(
@@ -123,8 +123,7 @@ def get_package_version_display_string(
         path = Path(os.path.relpath(package.source_url, root.as_posix())).as_posix()
         return f"{package.version} {path}"
 
-    pretty_version: str = package.full_pretty_version
-    return pretty_version
+    return package.full_pretty_version
 
 
 def paths_csv(paths: list[Path]) -> str:
@@ -147,9 +146,7 @@ def is_dir_writable(path: Path, create: bool = False) -> bool:
 
 
 def pluralize(count: int, word: str = "") -> str:
-    if count == 1:
-        return word
-    return word + "s"
+    return word if count == 1 else f"{word}s"
 
 
 def safe_extra(extra: str) -> str:
@@ -202,13 +199,7 @@ def _get_win_folder_with_ctypes(csidl_name: str) -> str:
     buf = ctypes.create_unicode_buffer(1024)
     ctypes.windll.shell32.SHGetFolderPathW(None, csidl_const, None, 0, buf)
 
-    # Downgrade to short path name if have highbit chars. See
-    # <http://bugs.activestate.com/show_bug.cgi?id=85099>.
-    has_high_char = False
-    for c in buf:
-        if ord(c) > 255:
-            has_high_char = True
-            break
+    has_high_char = any(ord(c) > 255 for c in buf)
     if has_high_char:
         buf2 = ctypes.create_unicode_buffer(1024)
         if ctypes.windll.kernel32.GetShortPathNameW(buf.value, buf2, 1024):

@@ -86,7 +86,7 @@ commands respectively.
 
         for name, info in plugins.items():
             package = info.package
-            description = " " + package.description if package.description else ""
+            description = f" {package.description}" if package.description else ""
             self.line("")
             self.line(f"  • <c1>{name}</c1> (<c2>{package.version}</c2>){description}")
             provide_line = "     "

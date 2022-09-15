@@ -10,6 +10,4 @@ class SinglePageRepository(LegacyRepository):
         Single page repositories only have one page irrespective of endpoint.
         """
         response = self._get_response("")
-        if not response:
-            return None
-        return SimpleRepositoryPage(response.url, response.text)
+        return SimpleRepositoryPage(response.url, response.text) if response else None

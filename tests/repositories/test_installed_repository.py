@@ -94,10 +94,7 @@ def repository(mocker: MockerFixture, env: MockEnv) -> InstalledRepository:
 def get_package_from_repository(
     name: str, repository: InstalledRepository
 ) -> Package | None:
-    for pkg in repository.packages:
-        if pkg.name == name:
-            return pkg
-    return None
+    return next((pkg for pkg in repository.packages if pkg.name == name), None)
 
 
 def test_load_successful(repository: InstalledRepository):

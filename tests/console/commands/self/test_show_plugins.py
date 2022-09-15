@@ -115,10 +115,7 @@ def entry_points(
     def _entry_points(**params: Any) -> list[metadata.EntryPoint]:
         group = params.get("group")
 
-        if group not in by_group:
-            return []
-
-        return by_group.get(group)
+        return [] if group not in by_group else by_group.get(group)
 
     return _entry_points
 

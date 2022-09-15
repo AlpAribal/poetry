@@ -262,9 +262,11 @@ The add command adds required packages to your <comment>pyproject.toml</> and in
         existing_packages = []
 
         for name in packages:
-            for key in section:
-                if canonicalize_name(key) == canonicalize_name(name):
-                    existing_packages.append(name)
+            existing_packages.extend(
+                name
+                for key in section
+                if canonicalize_name(key) == canonicalize_name(name)
+            )
 
         return existing_packages
 

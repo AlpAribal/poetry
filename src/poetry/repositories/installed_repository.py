@@ -126,10 +126,9 @@ class InstalledRepository(Repository):
         source_resolved_reference = None
         if is_standard_package:
             if path.name.endswith(".dist-info"):
-                paths = cls.get_package_paths(
+                if paths := cls.get_package_paths(
                     env=env, name=distribution.metadata["name"]
-                )
-                if paths:
+                ):
                     is_editable_package = False
                     for src in paths:
                         if cls.is_vcs_package(src, env):

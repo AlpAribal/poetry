@@ -40,8 +40,7 @@ class SystemGit:
 
     @staticmethod
     def run(*args: Any, **kwargs: Any) -> str:
-        folder = kwargs.pop("folder", None)
-        if folder:
+        if folder := kwargs.pop("folder", None):
             args = (
                 "--git-dir",
                 (folder / ".git").as_posix(),

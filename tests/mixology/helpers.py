@@ -68,9 +68,9 @@ def check_solver_result(
             return
         raise
 
-    packages = {}
-    for package in solution.packages:
-        packages[package.name] = str(package.version)
+    packages = {
+        package.name: str(package.version) for package in solution.packages
+    }
 
     assert result == packages
 

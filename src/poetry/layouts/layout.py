@@ -97,11 +97,10 @@ class Layout:
                 "from",
                 self.basedir.as_posix(),
             )
-        else:
-            if include == self._project:
-                # package include and package name are the same,
-                # packages table is redundant here.
-                return None
+        elif include == self._project:
+            # package include and package name are the same,
+            # packages table is redundant here.
+            return None
 
         return package
 
@@ -133,8 +132,7 @@ class Layout:
             poetry_content.remove("license")
 
         poetry_content["readme"] = f"README.{self._readme_format}"
-        packages = self.get_package_include()
-        if packages:
+        if packages := self.get_package_include():
             poetry_content["packages"].append(packages)
         else:
             poetry_content.remove("packages")
@@ -157,13 +155,13 @@ class Layout:
         build_system_version = ""
 
         if BUILD_SYSTEM_MIN_VERSION is not None:
-            build_system_version = ">=" + BUILD_SYSTEM_MIN_VERSION
+            build_system_version = f">={BUILD_SYSTEM_MIN_VERSION}"
         if BUILD_SYSTEM_MAX_VERSION is not None:
             if build_system_version:
                 build_system_version += ","
-            build_system_version += "<" + BUILD_SYSTEM_MAX_VERSION
+            build_system_version += f"<{BUILD_SYSTEM_MAX_VERSION}"
 
-        build_system.add("requires", ["poetry-core" + build_system_version])
+        build_system.add("requires", [f"poetry-core{build_system_version}"])
         build_system.add("build-backend", "poetry.core.masonry.api")
 
         assert isinstance(content, TOMLDocument)

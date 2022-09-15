@@ -68,10 +68,11 @@ class _Writer:
             self._write(self._root, f"Because {self._root}, version solving failed.")
 
         padding = (
-            0
-            if not self._line_numbers
-            else len(f"({list(self._line_numbers.values())[-1]}) ")
+            len(f"({list(self._line_numbers.values())[-1]}) ")
+            if self._line_numbers
+            else 0
         )
+
 
         last_was_empty = False
         for line in self._lines:
@@ -136,7 +137,7 @@ class _Writer:
                     with_line = cause.conflict
                     without_line = cause.other
                     line = conflict_line
-                elif other_line is not None:
+                else:
                     with_line = cause.other
                     without_line = cause.conflict
                     line = other_line

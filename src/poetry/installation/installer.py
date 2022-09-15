@@ -343,9 +343,9 @@ class Installer:
 
     def _write_lock_file(self, repo: LockfileRepository, force: bool = False) -> None:
         if self._write_lock and (force or self._update):
-            updated_lock = self._locker.set_lock_data(self._package, repo.packages)
-
-            if updated_lock:
+            if updated_lock := self._locker.set_lock_data(
+                self._package, repo.packages
+            ):
                 self._io.write_line("")
                 self._io.write_line("<info>Writing lock file</>")
 
@@ -512,11 +512,7 @@ class Installer:
     def _filter_operations(self, ops: Sequence[Operation], repo: Repository) -> None:
         extra_packages = self._get_extra_packages(repo)
         for op in ops:
-            if isinstance(op, Update):
-                package = op.target_package
-            else:
-                package = op.package
-
+            package = op.target_package if isinstance(op, Update) else op.package
             if op.job_type == "uninstall":
                 continue
 
@@ -524,12 +520,11 @@ class Installer:
                 op.skip("Not needed for the current environment")
                 continue
 
+            extras = {}
             if self._update:
-                extras = {}
                 for extra, dependencies in self._package.extras.items():
                     extras[extra] = [dependency.name for dependency in dependencies]
             else:
-                extras = {}
                 for extra, deps in self._locker.lock_data.get("extras", {}).items():
                     extras[extra] = [dep.lower() for dep in deps]
 

@@ -105,8 +105,9 @@ class PyPiRepository(HTTPRepository):
         search = {"q": query}
 
         response = requests.session().get(
-            self._base_url + "search", params=search, timeout=REQUESTS_TIMEOUT
+            f"{self._base_url}search", params=search, timeout=REQUESTS_TIMEOUT
         )
+
         content = parse(response.content, namespaceHTMLElements=False)
         for result in content.findall(".//*[@class='package-snippet']"):
             name_element = result.find("h3/*[@class='package-snippet__name']")
@@ -155,10 +156,9 @@ class PyPiRepository(HTTPRepository):
         if self._disable_cache:
             return self._get_package_info(name)
 
-        package_info: dict[str, Any] = self._cache.store("packages").remember_forever(
+        return self._cache.store("packages").remember_forever(
             name, lambda: self._get_package_info(name)
         )
-        return package_info
 
     def _get_package_info(self, name: str) -> dict[str, Any]:
         data = self._get(f"pypi/{name}/json")

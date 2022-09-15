@@ -37,17 +37,13 @@ class MockRepository(PyPiRepository):
     def _get(self, url: str) -> dict | None:
         parts = url.split("/")[1:]
         name = parts[0]
-        if len(parts) == 3:
-            version = parts[1]
-        else:
-            version = None
-
+        version = parts[1] if len(parts) == 3 else None
         if not version:
-            fixture = self.JSON_FIXTURES / (name + ".json")
+            fixture = self.JSON_FIXTURES / f"{name}.json"
         else:
-            fixture = self.JSON_FIXTURES / name / (version + ".json")
+            fixture = self.JSON_FIXTURES / name / f"{version}.json"
             if not fixture.exists():
-                fixture = self.JSON_FIXTURES / (name + ".json")
+                fixture = self.JSON_FIXTURES / f"{name}.json"
 
         if not fixture.exists():
             return
@@ -214,7 +210,7 @@ def test_pypi_repository_supports_reading_bz2_files():
         ]
     }
 
-    for name in expected_extras.keys():
+    for name in expected_extras:
         assert (
             sorted(package.extras[name], key=lambda r: r.name) == expected_extras[name]
         )

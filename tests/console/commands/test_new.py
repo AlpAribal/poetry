@@ -46,14 +46,12 @@ def verify_project_directory(
     else:
         package_include = {"include": package_path.parts[0]}
 
-    packages = poetry.local_config.get("packages")
-
-    if not packages:
-        assert poetry.local_config.get("name") == package_include.get("include")
-    else:
+    if packages := poetry.local_config.get("packages"):
         assert len(packages) == 1
         assert packages[0] == package_include
 
+    else:
+        assert poetry.local_config.get("name") == package_include.get("include")
     return poetry
 
 

@@ -34,11 +34,7 @@ class NewCommand(Command):
         from poetry.layouts import layout
         from poetry.utils.env import SystemEnv
 
-        if self.option("src"):
-            layout_cls = layout("src")
-        else:
-            layout_cls = layout("standard")
-
+        layout_cls = layout("src") if self.option("src") else layout("standard")
         path = Path(self.argument("path"))
         if not path.is_absolute():
             # we do not use resolve here due to compatibility issues
@@ -61,8 +57,7 @@ class NewCommand(Command):
         author = None
         if config.get("user.name"):
             author = config["user.name"]
-            author_email = config.get("user.email")
-            if author_email:
+            if author_email := config.get("user.email"):
                 author += f" <{author_email}>"
 
         current_env = SystemEnv(Path(sys.executable))

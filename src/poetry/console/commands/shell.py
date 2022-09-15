@@ -20,11 +20,9 @@ If one doesn't exist yet, it will be created.
     def handle(self) -> int:
         from poetry.utils.shell import Shell
 
-        # Check if it's already activated or doesn't exist and won't be created
-        venv_activated = strtobool(environ.get("POETRY_ACTIVE", "0")) or getattr(
-            sys, "real_prefix", sys.prefix
-        ) == str(self.env.path)
-        if venv_activated:
+        if venv_activated := strtobool(
+            environ.get("POETRY_ACTIVE", "0")
+        ) or getattr(sys, "real_prefix", sys.prefix) == str(self.env.path):
             self.line(
                 f"Virtual environment already activated: <info>{self.env.path}</>"
             )

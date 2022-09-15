@@ -226,8 +226,7 @@ class Factory(BaseFactory):
             ("maintainers", "maintainers"),
             ("keywords", "keywords"),
         }:
-            value = getattr(package, attr, None)
-            if value:
+            if value := getattr(package, attr, None):
                 content[key] = value
 
         readmes = []

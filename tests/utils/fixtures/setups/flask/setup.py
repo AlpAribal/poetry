@@ -12,7 +12,7 @@ with open("README.rst", encoding="utf8") as f:
     readme = f.read()
 
 with open("flask/__init__.py", encoding="utf8") as f:
-    version = re.search(r"__version__ = \'(.*?)\'", f.read()).group(1)
+    version = re.search(r"__version__ = \'(.*?)\'", f.read())[1]
 
 setup(
     name="Flask",

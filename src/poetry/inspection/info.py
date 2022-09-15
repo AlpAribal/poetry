@@ -180,8 +180,7 @@ class PackageInfo:
             path = None
 
         if path is not None:
-            poetry_package = self._get_poetry_package(path=path)
-            if poetry_package:
+            if poetry_package := self._get_poetry_package(path=path):
                 package.extras = poetry_package.extras
                 for dependency in poetry_package.requires:
                     package.add_dependency(dependency)
@@ -317,10 +316,7 @@ class PackageInfo:
             # now this is an unpacked directory we know how to deal with
             new_info = cls.from_directory(path=sdist_dir)
 
-        if not info:
-            return new_info
-
-        return info.update(new_info)
+        return info.update(new_info) if info else new_info
 
     @staticmethod
     def has_setup_files(path: Path) -> bool:
@@ -481,10 +477,12 @@ class PackageInfo:
 
             if not info or info.requires_dist is None:
                 try:
-                    if disable_build:
-                        info = cls.from_setup_files(path)
-                    else:
-                        info = get_pep517_metadata(path)
+                    info = (
+                        cls.from_setup_files(path)
+                        if disable_build
+                        else get_pep517_metadata(path)
+                    )
+
                 except PackageInfoError:
                     if not info:
                         raise

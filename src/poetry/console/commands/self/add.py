@@ -28,11 +28,7 @@ file.
     @property
     def _hint_update_packages(self) -> str:
         version = Version.parse(__version__)
-        flags = ""
-
-        if not version.is_stable():
-            flags = " --preview"
-
+        flags = "" if version.is_stable() else " --preview"
         return (
             "\nIf you want to update it to the latest compatible version, you can use"
             f" `poetry self update{flags}`.\nIf you prefer to upgrade it to the latest"

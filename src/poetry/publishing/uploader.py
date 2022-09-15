@@ -61,8 +61,7 @@ class Uploader:
 
     @property
     def user_agent(self) -> str:
-        agent: str = user_agent("poetry", __version__)
-        return agent
+        return user_agent("poetry", __version__)
 
     @property
     def adapter(self) -> adapters.HTTPAdapter:
@@ -152,10 +151,7 @@ class Uploader:
 
         md5_digest = md5_hash.hexdigest()
         sha2_digest = sha256_hash.hexdigest()
-        blake2_256_digest: str | None = None
-        if _has_blake2:
-            blake2_256_digest = blake2_256_hash.hexdigest()
-
+        blake2_256_digest = blake2_256_hash.hexdigest() if _has_blake2 else None
         py_version: str | None = None
         if file_type == "bdist_wheel":
             wheel_info = wheel_file_re.match(file.name)
@@ -336,9 +332,7 @@ class Uploader:
             if not isinstance(value, (list, tuple)):
                 data_to_send.append((key, value))
             else:
-                for item in value:
-                    data_to_send.append((key, item))
-
+                data_to_send.extend((key, item) for item in value)
         return data_to_send
 
     def _get_type(self, file: Path) -> str:

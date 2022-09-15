@@ -66,10 +66,9 @@ class Incompatibility:
 
             new_terms = []
             for by_ref in by_name.values():
-                positive_terms = [
+                if positive_terms := [
                     term for term in by_ref.values() if term.is_positive()
-                ]
-                if positive_terms:
+                ]:
                     new_terms += positive_terms
                     continue
 
@@ -269,7 +268,7 @@ class Incompatibility:
             [self._terse(term) for term in other.terms if not term.is_positive()]
         )
 
-        buffer = [self._terse(this_positive, allow_every=True) + " "]
+        buffer = [f"{self._terse(this_positive, allow_every=True)} "]
         is_dependency = isinstance(self.cause, DependencyCause) and isinstance(
             other.cause, DependencyCause
         )
@@ -340,11 +339,7 @@ class Incompatibility:
             prior_string = " or ".join([self._terse(term) for term in prior_positives])
             buffer.append(f"if {prior_string} then ")
         else:
-            if isinstance(prior.cause, DependencyCause):
-                verb = "depends on"
-            else:
-                verb = "requires"
-
+            verb = "depends on" if isinstance(prior.cause, DependencyCause) else "requires"
             buffer.append(
                 f"{self._terse(prior_positives[0], allow_every=True)} {verb} "
             )
@@ -411,7 +406,7 @@ class Incompatibility:
             else:
                 buffer.append(" requires ")
 
-        buffer.append(self._terse(latter.terms[0]) + " ")
+        buffer.append(f"{self._terse(latter.terms[0])} ")
         if prior_line is not None:
             buffer.append(f"({prior_line}) ")
 

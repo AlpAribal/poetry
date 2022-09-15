@@ -57,9 +57,7 @@ patch, minor, major, prepatch, preminor, premajor, prerelease.
     }
 
     def handle(self) -> int:
-        version = self.argument("version")
-
-        if version:
+        if version := self.argument("version"):
             version = self.increment_version(
                 self.poetry.package.pretty_version, version
             )
@@ -79,14 +77,13 @@ patch, minor, major, prepatch, preminor, premajor, prerelease.
 
                 assert isinstance(content, TOMLDocument)
                 self.poetry.file.write(content)
+        elif self.option("short"):
+            self.line(self.poetry.package.pretty_version)
         else:
-            if self.option("short"):
-                self.line(self.poetry.package.pretty_version)
-            else:
-                self.line(
-                    f"<comment>{self.poetry.package.name}</>"
-                    f" <info>{self.poetry.package.pretty_version}</>"
-                )
+            self.line(
+                f"<comment>{self.poetry.package.name}</>"
+                f" <info>{self.poetry.package.pretty_version}</>"
+            )
 
         return 0
 

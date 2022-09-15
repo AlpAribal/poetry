@@ -43,8 +43,7 @@ if sys.platform == "darwin":
 
 
 def data_dir() -> Path:
-    poetry_home = os.getenv("POETRY_HOME")
-    if poetry_home:
+    if poetry_home := os.getenv("POETRY_HOME"):
         return Path(poetry_home).expanduser()
 
     return user_data_path(_APP_NAME, appauthor=False, roaming=True)

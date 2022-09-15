@@ -31,40 +31,32 @@ if TYPE_CHECKING:
 
 @pytest.fixture()
 def simple_poetry() -> Poetry:
-    poetry = Factory().create_poetry(
+    return Factory().create_poetry(
         Path(__file__).parent.parent.parent / "fixtures" / "simple_project"
     )
-
-    return poetry
 
 
 @pytest.fixture()
 def project_with_include() -> Poetry:
-    poetry = Factory().create_poetry(
+    return Factory().create_poetry(
         Path(__file__).parent.parent.parent / "fixtures" / "with-include"
     )
-
-    return poetry
 
 
 @pytest.fixture()
 def extended_poetry() -> Poetry:
-    poetry = Factory().create_poetry(
+    return Factory().create_poetry(
         Path(__file__).parent.parent.parent / "fixtures" / "extended_project"
     )
-
-    return poetry
 
 
 @pytest.fixture()
 def extended_without_setup_poetry() -> Poetry:
-    poetry = Factory().create_poetry(
+    return Factory().create_poetry(
         Path(__file__).parent.parent.parent
         / "fixtures"
         / "extended_project_without_setup"
     )
-
-    return poetry
 
 
 @pytest.fixture()
@@ -273,8 +265,7 @@ def test_builder_installs_proper_files_when_packages_configured(
     paths = set()
     with pth_file.open() as f:
         for line in f.readlines():
-            line = line.strip(os.linesep)
-            if line:
+            if line := line.strip(os.linesep):
                 paths.add(line)
 
     project_root = project_with_include.file.parent.resolve()
